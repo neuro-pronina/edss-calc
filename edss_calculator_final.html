@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>EDSS Калькулятор</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fefefe;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 6px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background: #009688;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 25px;
+            padding: 10px;
+            background: #f1f1f1;
+            border-left: 5px solid #009688;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Калькулятор EDSS</h1>
+    <form id="edssForm">
+        <h3>Оценка функциональных систем (0–6):</h3>
+        <label>Пирамидная:</label>
+        <input type="number" id="pyramidal" min="0" max="6" step="0.5" value="0">
+
+        <label>Мозжечковая:</label>
+        <input type="number" id="cerebellar" min="0" max="6" step="0.5" value="0">
+
+        <label>Сенсорная:</label>
+        <input type="number" id="sensory" min="0" max="6" step="0.5" value="0">
+
+        <label>Ствол мозга:</label>
+        <input type="number" id="brainstem" min="0" max="6" step="0.5" value="0">
+
+        <label>Зрительная:</label>
+        <input type="number" id="visual" min="0" max="6" step="0.5" value="0">
+
+        <label>Тазовые функции:</label>
+        <input type="number" id="bowel" min="0" max="6" step="0.5" value="0">
+
+        <label>Когнитивные функции:</label>
+        <input type="number" id="cognitive" min="0" max="6" step="0.5" value="0">
+
+        <h3>Оценка ходьбы:</h3>
+        <label>Максимальная дистанция ходьбы без остановки (в метрах):</label>
+        <input type="number" id="distance" min="0" max="1000" step="10" value="500">
+
+        <label>Нуждается ли в помощи при ходьбе?</label>
+        <select id="assistance">
+            <option value="none">Нет</option>
+            <option value="one_cane">Одна трость</option>
+            <option value="two_can">Две трости/ходунки</option>
+            <option value="wheelchair">Инвалидная коляска</option>
+            <option value="bedridden">Постоянно в постели</option>
+        </select>
+
+        <button type="button" onclick="calculateEDSS()">Рассчитать EDSS</button>
+    </form>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        function calculateEDSS() {
+            const fss = [
+                parseFloat(document.getElementById('pyramidal').value) || 0,
+                parseFloat(document.getElementById('cerebellar').value) || 0,
+                parseFloat(document.getElementById('sensory').value) || 0,
+                parseFloat(document.getElementById('brainstem').value) || 0,
+                parseFloat(document.getElementById('visual').value) || 0,
+                parseFloat(document.getElementById('bowel').value) || 0,
+                parseFloat(document.getElementById('cognitive').value) || 0
+            ];
+            const distance = parseInt(document.getElementById('distance').value) || 0;
+            const assistance = document.getElementById('assistance').value;
+            const maxFSS = Math.max(...fss);
+
+            let edss = 0;
+            let explanation = "";
+
+            if (assistance === "bedridden") {
+                edss = 9.5;
+                explanation = "Постоянно прикован к постели.";
+            } else if (assistance === "wheelchair") {
+                edss = 7.0;
+                explanation = "Пациент прикован к инвалидному креслу, но сохраняет использование рук.";
+            } else if (assistance === "two_can") {
+                edss = 6.5;
+                explanation = "Требуется помощь двумя тростями или ходунками для хождения на 20 м.";
+            } else if (assistance === "one_cane") {
+                if (distance >= 100) {
+                    edss = 6.0;
+                    explanation = "Требуется трость для ходьбы на 100 м.";
+                } else {
+                    edss = 6.5;
+                    explanation = "Требуется трость, но проходит <100 м.";
+                }
+            } else {
+                if (distance >= 500) {
+                    if (maxFSS <= 1.5) edss = 1.5;
+                    else if (maxFSS <= 2.5) edss = 2.5;
+                    else if (maxFSS <= 3.5) edss = 3.5;
+                    else if (maxFSS <= 4.0) edss = 4.0;
+                    else edss = 4.5;
+                    explanation = "Пациент амбулаторен, ходит без помощи.";
+                } else if (distance >= 300) {
+                    edss = 5.0;
+                    explanation = "Может пройти 300–499 м без помощи, но с ограничениями.";
+                } else if (distance >= 100) {
+                    edss = 5.5;
+                    explanation = "Может пройти 100–299 м без помощи, но с ограничениями.";
+                } else {
+                    edss = 6.0;
+                    explanation = "Может пройти <100 м без помощи, ограничен в передвижении.";
+                }
+            }
+
+            document.getElementById('result').innerHTML = `<strong>EDSS: ${edss.toFixed(1)}</strong><br>${explanation}`;
+        }
+    </script>
+</body>
+</html>
